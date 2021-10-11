@@ -1,0 +1,85 @@
+.form-header-ctr {
+  width: 75%;
+  margin: 10px auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inputCtr {
+  width: 75%;
+  margin: auto;
+}
+.inputCtrPaymentsDepart {
+  width: 55%;
+  margin: auto;
+}
+.inputs_ctr {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin: 15px auto;
+  display: flex;
+  justify-content: space-around;
+}
+.inpts_center {
+  flex: 1;
+}
+.inpts_on_left {
+  flex: 1;
+}
+.inpts_on_right {
+  flex: 1;
+}
+@media screen and (max-width: 1024px) {
+  .form-header-ctr {
+    width: 100%;
+    align-items: center;
+  }
+
+  .inputCtr {
+    width: 100%;
+    margin: auto;
+  }
+  .inputs_ctr {
+    flex-direction: column;
+  }
+  /*Payments Responsive*/
+  .card-header-payments {
+    justify-content: flex-end;
+  }
+  .class_payment_header {
+    display: none;
+  }
+  .inputCtrPaymentsDepart {
+    width: 75%;
+    margin: auto;
+  }
+}
+
+/*lab request*/
+.tests_ctr {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin: 20px;
+  padding: 20px;
+}
+.selected_tests_ctr {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin: 20px;
+  padding: 20px;
+}
+.selected_tests_hdr {
+  font-size: 17.5px;
+  font-weight: 500;
+  margin: 10px 20px;
+}
+/*lab request*/
+@media screen and (max-width: 600px) {
+  /* payments responsive */
+  .inputCtrPaymentsDepart {
+    width: 100%;
+    margin: auto;
+  }
+}
