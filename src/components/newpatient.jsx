@@ -59,18 +59,18 @@ class Newpatient extends Component {
 
   handleSlideForward = () => {
     let err = false;
-    Object.values(this.state.required).forEach((e) => {
-      if (e.length === 0) {
-        err = true;
-        this.setState({
-          ...this.state,
-          error: true,
-          open: true,
-          messageState: "warning",
-          message: "These Input Fields are required",
-        });
-      }
-    });
+    // Object.values(this.state.required).forEach((e) => {
+    //   if (e.length === 0) {
+    //     err = true;
+    //     this.setState({
+    //       ...this.state,
+    //       error: true,
+    //       open: true,
+    //       messageState: "warning",
+    //       message: "These Input Fields are required",
+    //     });
+    //   }
+    // });
     if (!err) {
       this.setState({
         ...this.state,
@@ -146,7 +146,7 @@ class Newpatient extends Component {
                           name="patient_number"
                           variant="outlined"
                           label="New Patient Number"
-                          value={this.state.onOpenState.patient_number}
+                          // value={this.state.onOpenState.patient_number}
                           style={{
                             width: "250px",
                             margin: "20px 0px",
@@ -414,31 +414,31 @@ class Newpatient extends Component {
                                   labelId="district"
                                   label="District"
                                   defaultValue=""
-                                  onChange={async (e) => {
-                                    const sub_counties = await UsersApi.data(
-                                      `/user/all/subcounties/${e.target.value}`
-                                    );
-                                    if (
-                                      sub_counties.length !== 0 &&
-                                      sub_counties !== "Error"
-                                    ) {
-                                      this.setState({
-                                        ...this.state,
-                                        address: {
-                                          ...this.state.address,
-                                          sub_counties,
-                                        },
-                                      });
-                                    }
-                                  }}
+                                  // onChange={async (e) => {
+                                  //   const sub_counties = await UsersApi.data(
+                                  //     `/user/all/subcounties/${e.target.value}`
+                                  //   );
+                                  //   if (
+                                  //     sub_counties.length !== 0 &&
+                                  //     sub_counties !== "Error"
+                                  //   ) {
+                                  //     this.setState({
+                                  //       ...this.state,
+                                  //       address: {
+                                  //         ...this.state.address,
+                                  //         sub_counties,
+                                  //       },
+                                  //     });
+                                  //   }
+                                  // }}
                                 >
-                                  {this.state.address.districts.map((v, i) => {
+                                  {/* {this.state.address.districts.map((v, i) => {
                                     return (
                                       <MenuItem value={v.district_id} key={i}>
                                         {v.district_name}
                                       </MenuItem>
                                     );
-                                  })}
+                                  })} */}
                                 </Select>
                               </FormControl>
                               <FormControl
@@ -458,25 +458,25 @@ class Newpatient extends Component {
                                   // id="select_su"
                                   label="Sub County"
                                   defaultValue=""
-                                  onChange={async (e) => {
-                                    const parishes = await UsersApi.data(
-                                      `/user/all/parishes/${e.target.value}`
-                                    );
-                                    if (
-                                      parishes.length !== 0 &&
-                                      parishes !== "Error"
-                                    ) {
-                                      this.setState({
-                                        ...this.state,
-                                        address: {
-                                          ...this.state.address,
-                                          parishes,
-                                        },
-                                      });
-                                    }
-                                  }}
+                                  // onChange={async (e) => {
+                                  //   const parishes = await UsersApi.data(
+                                  //     `/user/all/parishes/${e.target.value}`
+                                  //   );
+                                  //   if (
+                                  //     parishes.length !== 0 &&
+                                  //     parishes !== "Error"
+                                  //   ) {
+                                  //     this.setState({
+                                  //       ...this.state,
+                                  //       address: {
+                                  //         ...this.state.address,
+                                  //         parishes,
+                                  //       },
+                                  //     });
+                                  //   }
+                                  // }}
                                 >
-                                  {this.state.address.sub_counties.map(
+                                  {/* {this.state.address.sub_counties.map(
                                     (v, i) => {
                                       return (
                                         <MenuItem
@@ -487,7 +487,7 @@ class Newpatient extends Component {
                                         </MenuItem>
                                       );
                                     }
-                                  )}
+                                  )} */}
                                 </Select>
                               </FormControl>
                               <FormControl
@@ -504,31 +504,31 @@ class Newpatient extends Component {
                                   labelId="parish"
                                   label="Parish"
                                   defaultValue=""
-                                  onChange={async (e) => {
-                                    const villages = await UsersApi.data(
-                                      `/user/all/villages/${e.target.value}`
-                                    );
-                                    if (
-                                      villages.length !== 0 &&
-                                      villages !== "Error"
-                                    ) {
-                                      this.setState({
-                                        ...this.state,
-                                        address: {
-                                          ...this.state.address,
-                                          villages,
-                                        },
-                                      });
-                                    }
-                                  }}
+                                  // onChange={async (e) => {
+                                  //   const villages = await UsersApi.data(
+                                  //     `/user/all/villages/${e.target.value}`
+                                  //   );
+                                  //   if (
+                                  //     villages.length !== 0 &&
+                                  //     villages !== "Error"
+                                  //   ) {
+                                  //     this.setState({
+                                  //       ...this.state,
+                                  //       address: {
+                                  //         ...this.state.address,
+                                  //         villages,
+                                  //       },
+                                  //     });
+                                  //   }
+                                  // }}
                                 >
-                                  {this.state.address.parishes.map((v, i) => {
+                                  {/* {this.state.address.parishes.map((v, i) => {
                                     return (
                                       <MenuItem value={v.parish_id} key={i}>
                                         {v.parish_name}
                                       </MenuItem>
                                     );
-                                  })}
+                                  })} */}
                                 </Select>
                               </FormControl>
                             </div>
@@ -549,13 +549,13 @@ class Newpatient extends Component {
                                   label="Villages"
                                   defaultValue="0"
                                 >
-                                  {this.state.address.villages.map((v, i) => {
+                                  {/* {this.state.address.villages.map((v, i) => {
                                     return (
                                       <MenuItem value={v.village_id} key={i}>
                                         {v.village_name}
                                       </MenuItem>
                                     );
-                                  })}
+                                  })} */}
                                 </Select>
                               </FormControl>
                               <TextField

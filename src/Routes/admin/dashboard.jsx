@@ -170,9 +170,11 @@ class Dashboard extends Component {
                       onClose={this.handleCloseActionsDrugs}
                       disableScrollLock={true}
                     >
-                      <MenuItem onClick={this.handleCloseActionsDrugs}>
-                        New Recepient
-                      </MenuItem>
+                      <Link to="/new-patient">
+                        <MenuItem onClick={this.handleCloseActionsDrugs}>
+                          New Recepient
+                        </MenuItem>
+                      </Link>
                       <MenuItem onClick={this.handleCloseActionsDrugs}>
                         See All
                       </MenuItem>
