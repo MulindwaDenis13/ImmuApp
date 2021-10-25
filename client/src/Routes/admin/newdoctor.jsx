@@ -9,8 +9,10 @@ import {
   FormControl,
   MenuItem,
 } from "@material-ui/core";
+import UsersApi from "../../api/users";
 import Nav from "./components/nav";
 import Header from "../../components/header";
+import Footer from "../../components/footer";
 import MuiAlert from "@material-ui/lab/Alert";
 import "../../design/forms.css";
 import "../../design/main.css";
@@ -26,7 +28,14 @@ class Newdoctor extends Component {
       open: false,
       message: "Please Wait....",
       messageState: "",
+      hospitals: [],
     };
+    this.fetchHospitals();
+  }
+
+  async fetchHospitals() {
+    const res = (await UsersApi.data("/admin/hospitals")) || [];
+    this.setState({ ...this.state, hospitals: res === "Error" ? [] : res });
   }
 
   closePopUp = (event, reason) => {
@@ -39,6 +48,41 @@ class Newdoctor extends Component {
       message: "Please Wait...",
       messageState: "info",
     });
+  };
+
+  handleDoctor = async (e) => {
+    e.preventDefault();
+    this.setState({
+      ...this.state,
+      open: true,
+      messageState: "info",
+      message: "Please Wait...",
+    });
+    const fd = new FormData(e.target);
+    let _fcontent = {};
+    fd.forEach((value, key) => {
+      _fcontent[key] = value;
+    });
+    const api = new UsersApi();
+    let res = await api.post("/admin/new-doctor", _fcontent);
+    if (res !== "Error") {
+      if (res.status === true) {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "success",
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "error",
+        });
+      }
+    }
   };
 
   render() {
@@ -79,7 +123,7 @@ class Newdoctor extends Component {
                 <form
                   className="card"
                   autoComplete="off"
-                  onSubmit={this.handleSubmit}
+                  onSubmit={this.handleDoctor}
                 >
                   <div
                     className=""
@@ -172,9 +216,18 @@ class Newdoctor extends Component {
                                 label="Hospital"
                                 defaultValue=""
                               >
-                                <MenuItem value="cashier">Cashier</MenuItem>
-                                <MenuItem value="dispenser">Dispenser</MenuItem>
-                                <MenuItem value="admin">Admin</MenuItem>
+                                {this.state.hospitals.length === 0
+                                  ? ""
+                                  : this.state.hospitals.map((v, i) => {
+                                      return (
+                                        <MenuItem
+                                          value={v.hospital_name}
+                                          key={i}
+                                        >
+                                          {v.hospital_name}
+                                        </MenuItem>
+                                      );
+                                    })}
                               </Select>
                             </FormControl>
 
@@ -228,6 +281,7 @@ class Newdoctor extends Component {
               </div>
             </div>
           </main>
+          <Footer />
         </div>
       </>
     );

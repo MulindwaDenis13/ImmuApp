@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 import Admin from "./user_routes/admin";
+import Doctor from "./user_routes/doctor";
+import Login from "./components/login";
+import user from "./config";
 
 class App extends Component {
   constructor(props) {
@@ -7,7 +10,13 @@ class App extends Component {
     this.state = {};
   }
   render() {
-    return <Admin />;
+    if (user.user.doctor_role === "admin") {
+      return <Admin />;
+    } else if (user.user.doctor_role === "doctor") {
+      return <Doctor />;
+    } else {
+      return <Login />;
+    }
   }
 }
 

@@ -6,7 +6,7 @@ export default class UsersApi {
   ///new Login
   static async login(data) {
     try {
-      const res = await axios.post(`${url}/user/admin/login`, data);
+      const res = await axios.post(`${url}/admin/login`, data);
       return res.data;
     } catch (error) {
       console.error(error);
@@ -22,7 +22,7 @@ export default class UsersApi {
       return "Error";
     }
   }
-  static async post(i, data) {
+  async post(i, data) {
     try {
       const res = await axios.post(`${url}${i}`, data);
       return res.data;

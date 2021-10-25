@@ -173,6 +173,30 @@ header label span {
   cursor: pointer;
 }
 
+/*footer*/
+footer {
+  border-radius: 5px;
+  margin: 10px;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  z-index: 20;
+  width: calc(100% - 105px);
+  transition: all 500ms;
+  box-shadow: 6px 6px 9px #dee1e5, -6px -6px 9px #ffffff;
+}
+
+footer h5 {
+  color: rgb(82, 79, 79);
+}
+footer label span {
+  padding-right: 1rem;
+  cursor: pointer;
+}
+
 .search-wrapper {
   border: 1px solid #ccc;
   border-radius: 30px;

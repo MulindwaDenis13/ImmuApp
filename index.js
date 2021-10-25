@@ -6,6 +6,7 @@ const port = process.env.PORT || 8080;
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/api/admin/", require("./api/admin"));
 
 app.listen(port, () => {
   console.log(`Server Started on PORT ${port}`);

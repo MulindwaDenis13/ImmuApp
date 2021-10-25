@@ -9,6 +9,8 @@ import {
   FormControl,
   MenuItem,
 } from "@material-ui/core";
+import { Redirect } from "react-router-dom";
+import UsersApi from "../api/users";
 import MuiAlert from "@material-ui/lab/Alert";
 import Header from "./header";
 import "../design/forms.css";
@@ -29,11 +31,52 @@ class Newpatient extends Component {
       currentTab: 0,
       backTabButtonClickable: false,
       submitButton: false,
+      districts: [],
+      subcounties: [],
+      villages: [],
       redirect: {
         status: false,
         url: null,
       },
+      onOpenState: {
+        patient_number: "",
+      },
+      required: {
+        surname: "",
+        other_names: "",
+      },
     };
+    this.onOpenFile();
+    this.fetchDistricts();
+  }
+
+  async fetchDistricts() {
+    const res = (await UsersApi.data("/admin/districts")) || [];
+    this.setState({ ...this.state, districts: res === "Error" ? [] : res });
+  }
+
+  fetchSub = async (e) => {
+    const res =
+      (await UsersApi.data(`/admin/subcounty/${e.target.value}`)) || [];
+    this.setState({ ...this.state, subcounties: res === "Error" ? [] : res });
+  };
+
+  fetchVillage = async (e) => {
+    const res = (await UsersApi.data(`/admin/village/${e.target.value}`)) || [];
+    this.setState({ ...this.state, villages: res === "Error" ? [] : res });
+  };
+
+  async onOpenFile() {
+    const p_number = await UsersApi.data("/admin/pnumber");
+    if (p_number.status === true) {
+      this.setState({
+        ...this.state,
+        onOpenState: {
+          ...this.state.onOpenState,
+          patient_number: p_number._pnumber,
+        },
+      });
+    }
   }
 
   closePopUp = (reason) => {
@@ -59,18 +102,18 @@ class Newpatient extends Component {
 
   handleSlideForward = () => {
     let err = false;
-    // Object.values(this.state.required).forEach((e) => {
-    //   if (e.length === 0) {
-    //     err = true;
-    //     this.setState({
-    //       ...this.state,
-    //       error: true,
-    //       open: true,
-    //       messageState: "warning",
-    //       message: "These Input Fields are required",
-    //     });
-    //   }
-    // });
+    Object.values(this.state.required).forEach((e) => {
+      if (e.length === 0) {
+        err = true;
+        this.setState({
+          ...this.state,
+          error: true,
+          open: true,
+          messageState: "warning",
+          message: "These Input Fields are required",
+        });
+      }
+    });
     if (!err) {
       this.setState({
         ...this.state,
@@ -93,7 +136,47 @@ class Newpatient extends Component {
     }
   };
 
+  handleRecepient = async (e) => {
+    e.preventDefault();
+    this.setState({
+      ...this.state,
+      open: true,
+      messageState: "info",
+      message: "Please Wait...",
+    });
+    const fd = new FormData(e.target);
+    let _fcontent = {};
+    fd.forEach((value, key) => {
+      _fcontent[key] = value;
+    });
+    const api = new UsersApi();
+    let res = await api.post("/admin/new-recepient", _fcontent);
+    if (res !== "Error") {
+      if (res.status === true) {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "success",
+          redirect: {
+            ...this.state.redirect,
+            url: `/`,
+          },
+        });
+      } else {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "error",
+        });
+      }
+    }
+  };
+
   render() {
+    const { redirect } = this.state;
+    if (redirect.status) {
+      return <Redirect to={redirect.url} />;
+    }
     return (
       <>
         <Snackbar
@@ -131,7 +214,7 @@ class Newpatient extends Component {
                   className="card"
                   autoComplete="off"
                   noValidate
-                  onSubmit={this.handleSubmit}
+                  onSubmit={this.handleRecepient}
                 >
                   <div
                     className=""
@@ -143,10 +226,10 @@ class Newpatient extends Component {
                     <div className="form-header-ctr">
                       <div className="">
                         <TextField
-                          name="patient_number"
+                          name="recepient_number"
                           variant="outlined"
                           label="New Recepient Number"
-                          // value={this.state.onOpenState.patient_number}
+                          value={this.state.onOpenState.patient_number}
                           style={{
                             width: "250px",
                             margin: "20px 0px",
@@ -252,22 +335,24 @@ class Newpatient extends Component {
                                   label="Gender"
                                   defaultValue=""
                                 >
-                                  <MenuItem value="M">Male</MenuItem>
-                                  <MenuItem value="F">Female</MenuItem>
+                                  <MenuItem value="Male">Male</MenuItem>
+                                  <MenuItem value="Female">Female</MenuItem>
                                 </Select>
                               </FormControl>
                             </div>
                             <div className="inpts_center">
                               <TextField
+                                type="number"
                                 name="birth_weight"
                                 variant="outlined"
-                                label="Birth Weight"
+                                label="Birth Weight in Kg"
                                 style={{
                                   width: "75%",
                                   margin: "20px",
                                 }}
                               />
                               <TextField
+                                type="number"
                                 name="birth_order"
                                 variant="outlined"
                                 label="Birth Order"
@@ -296,33 +381,99 @@ class Newpatient extends Component {
                               />
                             </div>
                             <div className="inpts_on_right">
-                              <TextField
-                                name="district"
+                              <FormControl
                                 variant="outlined"
-                                label="District"
                                 style={{
                                   width: "75%",
                                   margin: "20px",
                                 }}
-                              />
-                              <TextField
-                                name="sub_county"
+                              >
+                                <InputLabel id="district">District</InputLabel>
+                                <Select
+                                  inputProps={{ name: "district" }}
+                                  labelId="district"
+                                  id="select_district"
+                                  label="district"
+                                  defaultValue=""
+                                  onChange={this.fetchSub}
+                                >
+                                  {this.state.districts.length === 0
+                                    ? ""
+                                    : this.state.districts.map((v, i) => {
+                                        return (
+                                          <MenuItem
+                                            value={v.district_name}
+                                            key={i}
+                                          >
+                                            {v.district_name}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                </Select>
+                              </FormControl>
+
+                              <FormControl
                                 variant="outlined"
-                                label="Subcounty"
                                 style={{
                                   width: "75%",
                                   margin: "20px",
                                 }}
-                              />
-                              <TextField
-                                name="village"
+                              >
+                                <InputLabel id="subcounty">
+                                  Subcounty
+                                </InputLabel>
+                                <Select
+                                  inputProps={{ name: "sub_county" }}
+                                  labelId="subcounty"
+                                  id="select_sub"
+                                  label="subcounty"
+                                  defaultValue=""
+                                  onChange={this.fetchVillage}
+                                >
+                                  {this.state.subcounties.length === 0
+                                    ? ""
+                                    : this.state.subcounties.map((v, i) => {
+                                        return (
+                                          <MenuItem
+                                            value={v.sub_county_name}
+                                            key={i}
+                                          >
+                                            {v.sub_county_name}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                </Select>
+                              </FormControl>
+
+                              <FormControl
                                 variant="outlined"
-                                label="Village"
                                 style={{
                                   width: "75%",
                                   margin: "20px",
                                 }}
-                              />
+                              >
+                                <InputLabel id="village">Village</InputLabel>
+                                <Select
+                                  inputProps={{ name: "village" }}
+                                  labelId="village"
+                                  id="select_village"
+                                  label="village"
+                                  defaultValue=""
+                                >
+                                  {this.state.villages.length === 0
+                                    ? ""
+                                    : this.state.villages.map((v, i) => {
+                                        return (
+                                          <MenuItem
+                                            value={v.village_name}
+                                            key={i}
+                                          >
+                                            {v.village_name}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                </Select>
+                              </FormControl>
                             </div>
                           </div>
                           <div
@@ -355,137 +506,6 @@ class Newpatient extends Component {
                           <h4>Parent Details</h4>
                           <div className="inputs_ctr">
                             <div className="inpts_on_left">
-                              {/* <FormControl
-                                variant="outlined"
-                                style={{
-                                  width: "75%",
-                                  margin: "20px",
-                                }}
-                              >
-                                <InputLabel id="district">District</InputLabel>
-                                <Select
-                                  inputProps={{ name: "district" }}
-                                  required
-                                  labelId="district"
-                                  label="District"
-                                  defaultValue="" 
-                                  // onChange={async (e) => {
-                                  //   const sub_counties = await UsersApi.data(
-                                  //     `/user/all/subcounties/${e.target.value}`
-                                  //   );
-                                  //   if (
-                                  //     sub_counties.length !== 0 &&
-                                  //     sub_counties !== "Error"
-                                  //   ) {
-                                  //     this.setState({
-                                  //       ...this.state,
-                                  //       address: {
-                                  //         ...this.state.address,
-                                  //         sub_counties,
-                                  //       },
-                                  //     });
-                                  //   }
-                                  // }}
-                                >
-                                  {/* {this.state.address.districts.map((v, i) => {
-                                    return (
-                                      <MenuItem value={v.district_id} key={i}>
-                                        {v.district_name}
-                                      </MenuItem>
-                                    );
-                                  })} */}
-                              {/* </Select>
-                              </FormControl> */}
-                              {/* <FormControl
-                                variant="outlined"
-                                style={{
-                                  width: "75%",
-                                  margin: "20px",
-                                }}
-                              >
-                                <InputLabel id="sub_county">
-                                  Sub County
-                                </InputLabel>
-                                <Select
-                                  inputProps={{ name: "sub_county" }}
-                                  required
-                                  labelId="sub_county"
-                                  id="select_su"
-                                  label="Sub County"
-                                  defaultValue=""
-                                  onChange={async (e) => {
-                                    const parishes = await UsersApi.data(
-                                      `/user/all/parishes/${e.target.value}`
-                                    );
-                                    if (
-                                      parishes.length !== 0 &&
-                                      parishes !== "Error"
-                                    ) {
-                                      this.setState({
-                                        ...this.state,
-                                        address: {
-                                          ...this.state.address,
-                                          parishes,
-                                        },
-                                      });
-                                    }
-                                  }}
-                                >
-                                  {this.state.address.sub_counties.map(
-                                    (v, i) => {
-                                      return (
-                                        <MenuItem
-                                          value={v.sub_county_id}
-                                          key={i}
-                                        >
-                                          {v.sub_county_name}
-                                        </MenuItem>
-                                      );
-                                    }
-                                  )}
-                                </Select>
-                              </FormControl> */}
-                              {/* <FormControl
-                                variant="outlined"
-                                style={{
-                                  width: "75%",
-                                  margin: "20px",
-                                }}
-                              >
-                                <InputLabel id="parish">Parish</InputLabel>
-                                <Select
-                                  inputProps={{ name: "parish" }}
-                                  required
-                                  labelId="parish"
-                                  label="Parish"
-                                  defaultValue=""
-                                  onChange={async (e) => {
-                                    const villages = await UsersApi.data(
-                                      `/user/all/villages/${e.target.value}`
-                                    );
-                                    if (
-                                      villages.length !== 0 &&
-                                      villages !== "Error"
-                                    ) {
-                                      this.setState({
-                                        ...this.state,
-                                        address: {
-                                          ...this.state.address,
-                                          villages,
-                                        },
-                                      });
-                                    }
-                                  }}
-                                >
-                                  {this.state.address.parishes.map((v, i) => {
-                                    return (
-                                      <MenuItem value={v.parish_id} key={i}>
-                                        {v.parish_name}
-                                      </MenuItem>
-                                    );
-                                  })}
-                                </Select>
-                              </FormControl> */}
                               <TextField
                                 name="mother_name"
                                 variant="outlined"
@@ -524,7 +544,7 @@ class Newpatient extends Component {
                                   Mother's Religion
                                 </InputLabel>
                                 <Select
-                                  inputProps={{ name: "religion" }}
+                                  inputProps={{ name: "mother_religion" }}
                                   labelId="religion"
                                   id="select_religion"
                                   label="Religion"
@@ -552,7 +572,9 @@ class Newpatient extends Component {
                                   Mother's Education Level
                                 </InputLabel>
                                 <Select
-                                  inputProps={{ name: "education_level" }}
+                                  inputProps={{
+                                    name: "mother_education_level",
+                                  }}
                                   labelId="education_level"
                                   id="select_gender"
                                   label="Education Level"
@@ -577,7 +599,7 @@ class Newpatient extends Component {
                                 }}
                               />
                               <TextField
-                                name="father_conatct"
+                                name="father_contact"
                                 variant="outlined"
                                 label="Father's Contact"
                                 style={{
@@ -607,7 +629,9 @@ class Newpatient extends Component {
                                   Father's Education Level
                                 </InputLabel>
                                 <Select
-                                  inputProps={{ name: "education_level" }}
+                                  inputProps={{
+                                    name: "father_education_level",
+                                  }}
                                   labelId="education_level"
                                   id="select_gender"
                                   label="Education Level"
@@ -633,7 +657,7 @@ class Newpatient extends Component {
                                   Father's Religion
                                 </InputLabel>
                                 <Select
-                                  inputProps={{ name: "religion" }}
+                                  inputProps={{ name: "father_religion" }}
                                   labelId="religion"
                                   id="select_religion"
                                   label="Religion"

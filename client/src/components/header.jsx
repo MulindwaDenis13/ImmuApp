@@ -10,6 +10,8 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@material-ui/core";
+import { Logout } from "./login";
+import user from "../config";
 
 function Header() {
   const [AnchorEl, setAnchorEl] = useState(null);
@@ -56,8 +58,8 @@ function Header() {
           >
             <img src={Avatar} alt="" width="40px" height="40px" />
             <div className="">
-              <h4>Mulindwa</h4>
-              <small>Admin</small>
+              <h4>{user.user.doctor_username}</h4>
+              <small>{user.user.doctor_role}</small>
             </div>
           </div>
         </div>
@@ -105,9 +107,9 @@ function Header() {
             variant="contained"
             color="primary"
             autoFocus
-            // onClick={() => {
-            //   Logout();
-            // }}
+            onClick={() => {
+              Logout();
+            }}
           >
             Log Out
           </Button>

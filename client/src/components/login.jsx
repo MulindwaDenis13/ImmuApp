@@ -4,6 +4,7 @@ import Image from "../assets/doctor.png";
 import Logo from "../assets/logo_hospital.png";
 import "./login.css";
 import { Base64 } from "js-base64";
+import UsersApi from "../api/users";
 
 function Login() {
   const [user, setUser] = useState({ username: "", password: "", _cp: true });
@@ -24,7 +25,7 @@ function Login() {
         const data = Base64.encode(JSON.stringify(res.user));
         sessionStorage.setItem("token", data);
         window.location.replace("/");
-        // setloaderOpen(false);
+        setloaderOpen(false);
       }
     } else {
       setServerError("Server Error...");
@@ -53,7 +54,7 @@ function Login() {
             margin: "15px 0px",
           }}
         >
-          Teaching Hospital
+          Immunisation
         </div>
         <div className="loginCtr">
           <TextField
@@ -74,6 +75,7 @@ function Login() {
             }}
           />
           <TextField
+            type="password"
             name="password"
             variant="standard"
             helperText={!user._cp ? "Incorrect Username Or Password" : ""}
