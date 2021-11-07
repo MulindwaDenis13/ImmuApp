@@ -7,11 +7,18 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Menu,
   MenuItem,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@material-ui/core";
-import { Redirect } from "react-router-dom";
+
 import UsersApi from "../api/users";
 import MuiAlert from "@material-ui/lab/Alert";
+import user from "../config";
 import Header from "./header";
 import "../design/forms.css";
 import "../design/main.css";
@@ -24,8 +31,12 @@ class Newpatient extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      AnchorElAddress: null,
       error: false,
       open: false,
+      district: false,
+      subcounty: false,
+      village: false,
       message: "",
       messageState: "",
       currentTab: 0,
@@ -78,6 +89,25 @@ class Newpatient extends Component {
       });
     }
   }
+
+  handleOpenAction = (e) => {
+    this.setState({ ...this.state, AnchorElAddress: e.currentTarget });
+  };
+  handleCloseAction = () => {
+    this.setState({ ...this.state, AnchorElAddress: null });
+  };
+
+  CloseDistrict = () => {
+    this.setState({ ...this.state, district: false });
+  };
+
+  CloseSubcounty = () => {
+    this.setState({ ...this.state, subcounty: false });
+  };
+
+  CloseVillage = () => {
+    this.setState({ ...this.state, village: false });
+  };
 
   closePopUp = (reason) => {
     if (reason === "clickaway") {
@@ -149,6 +179,8 @@ class Newpatient extends Component {
     fd.forEach((value, key) => {
       _fcontent[key] = value;
     });
+    _fcontent["user"] = user.user.doctors_id;
+    _fcontent["date"] = Date.now();
     const api = new UsersApi();
     let res = await api.post("/admin/new-recepient", _fcontent);
     if (res !== "Error") {
@@ -157,11 +189,116 @@ class Newpatient extends Component {
           ...this.state,
           message: res.data,
           messageState: "success",
-          redirect: {
-            ...this.state.redirect,
-            url: `/`,
-          },
         });
+        setTimeout(() => {
+          window.location.assign("/");
+        }, 500);
+      } else {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "error",
+        });
+      }
+    }
+  };
+
+  //Manage Addresses
+  handleVillage = async (e) => {
+    e.preventDefault();
+    this.setState({
+      ...this.state,
+      open: true,
+      messageState: "info",
+      message: "Please Wait...",
+    });
+    const fd = new FormData(e.target);
+    let _fcontent = {};
+    fd.forEach((value, key) => {
+      _fcontent[key] = value;
+    });
+    const api = new UsersApi();
+    let res = await api.post("/admin/new-village", _fcontent);
+    if (res !== "Error") {
+      if (res.status === true) {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "success",
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "error",
+        });
+      }
+    }
+  };
+
+  handleSubcounty = async (e) => {
+    e.preventDefault();
+    this.setState({
+      ...this.state,
+      open: true,
+      messageState: "info",
+      message: "Please Wait...",
+    });
+    const fd = new FormData(e.target);
+    let _fcontent = {};
+    fd.forEach((value, key) => {
+      _fcontent[key] = value;
+    });
+    const api = new UsersApi();
+    let res = await api.post("/admin/new-subcounty", _fcontent);
+    if (res !== "Error") {
+      if (res.status === true) {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "success",
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "error",
+        });
+      }
+    }
+  };
+
+  handleDistrict = async (e) => {
+    e.preventDefault();
+    this.setState({
+      ...this.state,
+      open: true,
+      messageState: "info",
+      message: "Please Wait...",
+    });
+    const fd = new FormData(e.target);
+    let _fcontent = {};
+    fd.forEach((value, key) => {
+      _fcontent[key] = value;
+    });
+    const api = new UsersApi();
+    let res = await api.post("/admin/new-district", _fcontent);
+    if (res !== "Error") {
+      if (res.status === true) {
+        this.setState({
+          ...this.state,
+          message: res.data,
+          messageState: "success",
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       } else {
         this.setState({
           ...this.state,
@@ -173,10 +310,6 @@ class Newpatient extends Component {
   };
 
   render() {
-    const { redirect } = this.state;
-    if (redirect.status) {
-      return <Redirect to={redirect.url} />;
-    }
     return (
       <>
         <Snackbar
@@ -241,10 +374,60 @@ class Newpatient extends Component {
                         <Button
                           variant="contained"
                           color="primary"
-                          style={{ marginRight: 10 }}
+                          aria-controls="drug-actions"
+                          aria-haspopup="true"
+                          onClick={this.handleOpenAction}
                         >
-                          Cancel
+                          Address
+                          <span
+                            style={{ fontSize: "17.5px", marginLeft: "10px" }}
+                          >
+                            <span className="las la-angle-down"></span>
+                          </span>
                         </Button>
+                        <Menu
+                          id="address"
+                          anchorEl={this.state.AnchorElAddress}
+                          keepMounted
+                          open={Boolean(this.state.AnchorElAddress)}
+                          onClose={this.handleCloseAction}
+                          disableScrollLock={true}
+                        >
+                          <MenuItem
+                            onClick={() => {
+                              this.setState({
+                                ...this.state,
+                                AnchorElAddress: null,
+                                district: true,
+                              });
+                            }}
+                          >
+                            New District
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              this.setState({
+                                ...this.state,
+                                AnchorElAddress: null,
+                                subcounty: true,
+                              });
+                            }}
+                          >
+                            New SubCounty
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              this.setState({
+                                ...this.state,
+                                AnchorElAddress: null,
+                                village: true,
+                              });
+                            }}
+                          >
+                            New Village
+                          </MenuItem>
+                        </Menu>
+
                         <Button
                           type="submit"
                           aria-describedby={this.id}
@@ -365,15 +548,6 @@ class Newpatient extends Component {
                                 name="place_of_birth"
                                 variant="outlined"
                                 label="Place of Birth"
-                                style={{
-                                  width: "75%",
-                                  margin: "20px",
-                                }}
-                              />
-                              <TextField
-                                name="age"
-                                variant="outlined"
-                                label="Age"
                                 style={{
                                   width: "75%",
                                   margin: "20px",
@@ -708,6 +882,177 @@ class Newpatient extends Component {
             </div>
           </main>
         </div>
+        <Dialog
+          open={this.state.district}
+          onClose={this.CloseDistrict}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Add District</DialogTitle>
+          <form autoComplete="off" onSubmit={this.handleDistrict}>
+            <DialogContent>
+              <DialogContentText>
+                <TextField
+                  name="district_name"
+                  variant="standard"
+                  label="District Name"
+                  style={{
+                    width: "85%",
+                    margin: "20px",
+                  }}
+                />
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={this.CloseDistrict} color="primary">
+                Cancel
+              </Button>
+              <Button type="submit" color="primary">
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+
+        <Dialog
+          open={this.state.subcounty}
+          onClose={this.CloseSubcounty}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Add SubCounty</DialogTitle>
+          <form autoComplete="off" onSubmit={this.handleSubcounty}>
+            <DialogContent>
+              <DialogContentText>
+                <FormControl
+                  variant="standard"
+                  style={{
+                    width: "75%",
+                    margin: "20px",
+                  }}
+                >
+                  <InputLabel id="district">District</InputLabel>
+                  <Select
+                    inputProps={{ name: "district" }}
+                    labelId="district"
+                    id="select_district"
+                    label="district"
+                    defaultValue=""
+                  >
+                    {this.state.districts.length === 0
+                      ? ""
+                      : this.state.districts.map((v, i) => {
+                          return (
+                            <MenuItem value={v.district_name} key={i}>
+                              {v.district_name}
+                            </MenuItem>
+                          );
+                        })}
+                  </Select>
+                </FormControl>
+                <TextField
+                  name="sub_name"
+                  variant="standard"
+                  label="Subcounty"
+                  style={{
+                    width: "85%",
+                    margin: "20px",
+                  }}
+                />
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={this.CloseSubcounty} color="primary">
+                Cancel
+              </Button>
+              <Button type="submit" color="primary">
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+
+        <Dialog
+          open={this.state.village}
+          onClose={this.CloseVillage}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Add Village</DialogTitle>
+          <form autoComplete="off" onSubmit={this.handleVillage}>
+            <DialogContent>
+              <DialogContentText>
+                <FormControl
+                  variant="standard"
+                  style={{
+                    width: "75%",
+                    margin: "20px",
+                  }}
+                >
+                  <InputLabel id="district">District</InputLabel>
+                  <Select
+                    inputProps={{ name: "district" }}
+                    labelId="district"
+                    id="select_district"
+                    label="district"
+                    defaultValue=""
+                    onChange={this.fetchSub}
+                  >
+                    {this.state.districts.length === 0
+                      ? ""
+                      : this.state.districts.map((v, i) => {
+                          return (
+                            <MenuItem value={v.district_name} key={i}>
+                              {v.district_name}
+                            </MenuItem>
+                          );
+                        })}
+                  </Select>
+                </FormControl>
+                <FormControl
+                  variant="standard"
+                  style={{
+                    width: "75%",
+                    margin: "20px",
+                  }}
+                >
+                  <InputLabel id="subcounty">Subcounty</InputLabel>
+                  <Select
+                    inputProps={{ name: "sub_county" }}
+                    labelId="subcounty"
+                    id="select_sub"
+                    label="subcounty"
+                    defaultValue=""
+                  >
+                    {this.state.subcounties.length === 0
+                      ? ""
+                      : this.state.subcounties.map((v, i) => {
+                          return (
+                            <MenuItem value={v.sub_county_name} key={i}>
+                              {v.sub_county_name}
+                            </MenuItem>
+                          );
+                        })}
+                  </Select>
+                </FormControl>
+                <TextField
+                  name="village_name"
+                  variant="standard"
+                  label="Village"
+                  style={{
+                    width: "85%",
+                    margin: "20px",
+                  }}
+                />
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={this.CloseVillage} color="primary">
+                Cancel
+              </Button>
+              <Button type="submit" color="primary">
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </Dialog>
       </>
     );
   }

@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 import Nav from "./components/nav";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import user from "../../config";
 
 function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -30,16 +31,80 @@ class Dashboard extends Component {
       AnchorEl: null,
       AnchorElDrugs: null,
       dialog: false,
+      vaccinate: false,
       message: "Please Wait",
       messageState: "",
       recepients: [],
+      recepient_vaccinations: [],
+      doctor_vaccination: [],
+      vaccines: 0,
+      recepient: 0,
     };
     this.fetchRecepients();
+    this.fetchVaccinations();
   }
 
   async fetchRecepients() {
-    const res = (await UsersApi.data("/admin/recepients")) || [];
-    this.setState({ ...this.state, recepients: res === "Error" ? [] : res });
+    const res =
+      (await UsersApi.data(`/admin/recepients/${user.user.doctors_id}`)) || [];
+    let recepient = 0;
+    let today =
+      new Date(Date.now()).getDate() +
+      "-" +
+      (new Date(Date.now()).getMonth() + 1) +
+      "-" +
+      new Date(Date.now()).getFullYear();
+    res === "Error"
+      ? this.setState({ ...this.state, recepient: 0 })
+      : res.forEach((i) => {
+          let recepient_date =
+            new Date(parseInt(i.recepient_date)).getDate() +
+            "-" +
+            (new Date(parseInt(i.recepient_date)).getMonth() + 1) +
+            "-" +
+            new Date(parseInt(i.recepient_date)).getFullYear();
+          if (today === recepient_date) {
+            recepient++;
+          }
+        });
+    this.setState({
+      ...this.state,
+      recepients: res === "Error" ? [] : res,
+      recepient: recepient,
+    });
+  }
+
+  async fetchVaccinations() {
+    const res =
+      (await UsersApi.data(
+        `/admin/doctor-vaccinations/${user.user.doctors_id}`
+      )) || [];
+    let vaccines = 0;
+    let today =
+      new Date(Date.now()).getDate() +
+      "-" +
+      (new Date(Date.now()).getMonth() + 1) +
+      "-" +
+      new Date(Date.now()).getFullYear();
+    res === "Error"
+      ? this.setState({ ...this.state, vaccines: 0 })
+      : res.forEach((i) => {
+          let vaccine_date =
+            new Date(parseInt(i.vaccine_date)).getDate() +
+            "-" +
+            (new Date(parseInt(i.vaccine_date)).getMonth() + 1) +
+            "-" +
+            new Date(parseInt(i.vaccine_date)).getFullYear();
+          if (today === vaccine_date) {
+            vaccines++;
+          }
+        });
+
+    this.setState({
+      ...this.state,
+      doctor_vaccination: res === "Error" ? [] : res,
+      vaccines: vaccines,
+    });
   }
 
   closePopUp = (event, reason) => {
@@ -56,6 +121,10 @@ class Dashboard extends Component {
 
   handleClose = () => {
     this.setState({ ...this.state, dialog: false });
+  };
+
+  CloseVaccinate = () => {
+    this.setState({ ...this.state, vaccinate: false });
   };
 
   handleOpenActions = (e) => {
@@ -106,6 +175,25 @@ class Dashboard extends Component {
     }
   };
 
+  getNameSpaces(n, i) {
+    let name = n.split(" ")[0];
+    let name_formatted;
+    if (name.length === i) {
+      name_formatted = name + " ";
+    }
+    if (name.length > i) {
+      name_formatted = name.substring(0, i) + " ";
+    }
+    if (name.length < i) {
+      name_formatted = name;
+      let spaces = i - name.length;
+      for (let i = 0; i < spaces; i++) {
+        name_formatted = name_formatted + " ";
+      }
+    }
+    return name_formatted;
+  }
+
   render() {
     return (
       <>
@@ -142,7 +230,7 @@ class Dashboard extends Component {
             <div className="cards">
               <div className="card-single">
                 <div className="">
-                  <h3>20</h3>
+                  <h3>{this.state.doctor_vaccination.length}</h3>
                   <span>Vaccinations</span>
                   <br />
                   <span style={{ fontSize: "13px" }}>Made</span>
@@ -153,7 +241,7 @@ class Dashboard extends Component {
               </div>
               <div className="card-single">
                 <div className="">
-                  <h3>12</h3>
+                  <h3>{this.state.vaccines}</h3>
                   <span>Vaccinations</span> <br />
                   <span style={{ fontSize: "13px" }}>Made Today</span>
                 </div>
@@ -163,7 +251,7 @@ class Dashboard extends Component {
               </div>
               <div className="card-single">
                 <div className="">
-                  <h3>35</h3>
+                  <h3>{this.state.recepients.length}</h3>
                   <span>Recepients</span>
                   <br />
                   <span style={{ fontSize: "13px" }}>Registered</span>
@@ -174,7 +262,7 @@ class Dashboard extends Component {
               </div>
               <div className="card-single">
                 <div className="">
-                  <h3>10</h3>
+                  <h3>{this.state.recepient}</h3>
                   <span>Recepients</span>
                   <br />
                   <span style={{ fontSize: "13px" }}>Registered Today</span>
@@ -190,6 +278,11 @@ class Dashboard extends Component {
                 <div className="card">
                   <div className="card-header">
                     <h3>Recent Recepients</h3>
+                    <Link to="/recepients">
+                      <Button variant="contained" color="primary">
+                        Search
+                      </Button>
+                    </Link>
                     <Button
                       variant="contained"
                       color="primary"
@@ -215,9 +308,6 @@ class Dashboard extends Component {
                           New Recepient
                         </MenuItem>
                       </Link>
-                      <MenuItem onClick={this.handleCloseActionsDrugs}>
-                        See All
-                      </MenuItem>
                     </Menu>
                   </div>
                   <div className="card-body">
@@ -225,7 +315,7 @@ class Dashboard extends Component {
                       <thead>
                         <tr>
                           <td>Name</td>
-                          <td>Age</td>
+                          <td>Date Of Birth</td>
                           <td>Birth Place</td>
                           <td></td>
                         </tr>
@@ -233,22 +323,66 @@ class Dashboard extends Component {
                       <tbody>
                         {this.state.recepients.length === 0 ? (
                           <tr>
-                            <td>No Recepient Registered</td>
+                            <td>You have Registered no Recepient </td>
                           </tr>
-                        ) : (
-                          this.state.recepients.slice(0, 4).map((v, i) => {
-                            return (
-                              <tr key={i}>
-                                <td className="name_cell">{v.sur_name}</td>
-                                <td>{v.child_age}</td>
-                                <td>{v.birth_place}</td>
-                                <Link
-                                  to={`/vaccination?recepient-id=${v.patient_id}`}
-                                >
-                                  <Button variant="contained" color="primary">
-                                    Vaccinate
+                        ) : this.state.recepients.length >= 5 ? (
+                          this.state.recepients
+                            .slice(
+                              this.state.recepients.length - 5,
+                              this.state.recepients.length
+                            )
+                            .map((v, i) => {
+                              return (
+                                <tr key={i}>
+                                  <td className="name_cell">{v.sur_name}</td>
+                                  <td>{v.date_of_birth}</td>
+                                  <td>{v.birth_place}</td>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={async () => {
+                                      let res = await UsersApi.data(
+                                        `/admin/vaccinations/${v.recepient_id}`
+                                      );
+                                      this.setState({
+                                        ...this.state,
+                                        recepient_vaccinations:
+                                          res === "Error" ? [] : res,
+                                        vaccinate: true,
+                                        data: v.recepient_id,
+                                      });
+                                    }}
+                                  >
+                                    Record
                                   </Button>
-                                </Link>
+                                </tr>
+                              );
+                            })
+                        ) : (
+                          this.state.recepients.map((x, y) => {
+                            return (
+                              <tr key={y}>
+                                <td className="name_cell">{x.sur_name}</td>
+                                <td>{x.date_of_birth}</td>
+                                <td>{x.birth_place}</td>
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  onClick={async () => {
+                                    let res = await UsersApi.data(
+                                      `/admin/vaccinations/${x.recepient_id}`
+                                    );
+                                    this.setState({
+                                      ...this.state,
+                                      recepient_vaccinations:
+                                        res === "Error" ? [] : res,
+                                      vaccinate: true,
+                                      data: x.recepient_id,
+                                    });
+                                  }}
+                                >
+                                  Record
+                                </Button>
                               </tr>
                             );
                           })
@@ -295,13 +429,169 @@ class Dashboard extends Component {
                       </MenuItem>
                     </Menu>
                   </div>
-                  <div className="card-body"></div>
+                  <div className="card-body">
+                    <table width="100%">
+                      <thead>
+                        <tr>
+                          <td>Number</td>
+                          <td>Name</td>
+                          <td>Date of Birth</td>
+                          <td>Vaccines</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {this.state.doctor_vaccination.length === 0 ? (
+                          <tr>
+                            <td>No Vaccination Made</td>
+                          </tr>
+                        ) : this.state.doctor_vaccination.length >= 5 ? (
+                          this.state.doctor_vaccination
+                            .slice(
+                              this.state.doctor_vaccination.length - 5,
+                              this.state.doctor_vaccination.length
+                            )
+                            .map((v, i) => {
+                              return (
+                                <tr key={i}>
+                                  <td>{v.recepient_number}</td>
+                                  <td>{v.sur_name}</td>
+                                  <td>{v.date_of_birth}</td>
+                                  <td>
+                                    <Button
+                                      color="primary"
+                                      variant="contained"
+                                      onClick={async () => {
+                                        let res = await UsersApi.data(
+                                          `/admin/vaccinations/${v.recepient_id}`
+                                        );
+                                        this.setState({
+                                          ...this.state,
+                                          recepient_vaccinations:
+                                            res === "Error" ? [] : res,
+                                          vaccinate: true,
+                                          data: v.recepient_id,
+                                        });
+                                      }}
+                                    >
+                                      See
+                                    </Button>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                        ) : (
+                          this.state.doctor_vaccination.map((x, y) => {
+                            return (
+                              <tr key={y}>
+                                <td>{x.recepient_number}</td>
+                                <td>{x.sur_name}</td>
+                                <td>{x.date_of_birth}</td>
+                                <td>
+                                  <Button
+                                    color="primary"
+                                    variant="contained"
+                                    onClick={async () => {
+                                      let res = await UsersApi.data(
+                                        `/admin/vaccinations/${x.recepient_id}`
+                                      );
+                                      this.setState({
+                                        ...this.state,
+                                        recepient_vaccinations:
+                                          res === "Error" ? [] : res,
+                                        vaccinate: true,
+                                        data: x.recepient_id,
+                                      });
+                                    }}
+                                  >
+                                    See
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
           </main>
           <Footer />
         </div>
+
+        <Dialog
+          open={this.state.vaccinate}
+          onClose={this.CloseVaccinate}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Vaccination</DialogTitle>
+
+          <DialogContent>
+            <DialogContentText>
+              <h5>Past Immunisations</h5>
+              <table>
+                <thead>
+                  <td>Hospital</td>
+                  <td>Vaccines</td>
+                  <td>Date</td>
+                </thead>
+                <tbody>
+                  {this.state.recepient_vaccinations.length === 0
+                    ? "No Vaccination for this recepient"
+                    : this.state.recepient_vaccinations.map((v, i) => {
+                        let vaccines = "";
+                        let vac = JSON.parse(v.vaccines);
+                        vac.forEach((v) => {
+                          if (vac.length > 1) {
+                            if (vac.indexOf(v) === vac.length - 1) {
+                              vaccines =
+                                vaccines +
+                                `${this.getNameSpaces(v.vaccine_name, 10)}`;
+                            } else {
+                              vaccines =
+                                vaccines +
+                                `${this.getNameSpaces(v.vaccine_name, 10)}` +
+                                ",";
+                            }
+                          } else {
+                            vaccines =
+                              vaccines +
+                              `${this.getNameSpaces(v.vaccine_name, 10)}`;
+                          }
+                        });
+                        return (
+                          <tr key={i}>
+                            <td>{v.doctor_hospital}</td>
+                            <td>{vaccines}</td>
+                            <td>
+                              {new Date(parseInt(v.vaccine_date)).getDate() +
+                                "-" +
+                                (new Date(parseInt(v.vaccine_date)).getMonth() +
+                                  1) +
+                                "-" +
+                                new Date(
+                                  parseInt(v.vaccine_date)
+                                ).getFullYear()}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                </tbody>
+              </table>
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.CloseVaccinate} color="primary">
+              Cancel
+            </Button>
+            <Link to={`/vaccination?recepient-id=${parseInt(this.state.data)}`}>
+              <Button type="submit" color="primary">
+                Continue
+              </Button>
+            </Link>
+          </DialogActions>
+        </Dialog>
 
         <Dialog
           open={this.state.dialog}
@@ -345,9 +635,7 @@ class Dashboard extends Component {
               <Button onClick={this.handleClose} color="primary">
                 Cancel
               </Button>
-              <Button type="submit" color="primary">
-                Save
-              </Button>
+              <Button color="primary">Continue</Button>
             </DialogActions>
           </form>
         </Dialog>

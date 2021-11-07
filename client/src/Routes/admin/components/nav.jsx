@@ -48,14 +48,14 @@ class Nav extends Component {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/patients">
+                  <Link to="/recepients">
                     <span
                       className={`${
-                        this.props.active === "children" ? "active" : ""
+                        this.props.active === "recepients" ? "active" : ""
                       } _a_replaced`}
                     >
                       <span className="las la-user-injured"></span>
-                      <span>Patients</span>
+                      <span>Recepients</span>
                     </span>
                   </Link>
                 </li>
@@ -68,6 +68,30 @@ class Nav extends Component {
                     >
                       <span className="las la-medkit"></span>
                       <span>Vaccines</span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/vaccinations">
+                    <span
+                      className={`${
+                        this.props.active === "vaccinations" ? "active" : ""
+                      } _a_replaced`}
+                    >
+                      <span className="las la-notes-medical"></span>
+                      <span>Vaccinations</span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/analytics">
+                    <span
+                      className={`${
+                        this.props.active === "charts" ? "active" : ""
+                      } _a_replaced`}
+                    >
+                      <span className="las la-chart-bar"></span>
+                      <span>Analytics</span>
                     </span>
                   </Link>
                 </li>

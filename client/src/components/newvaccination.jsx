@@ -1,11 +1,13 @@
 import React, { Component } from "react";
 import { TextField, Snackbar, Button, IconButton } from "@material-ui/core";
-
 import MuiAlert from "@material-ui/lab/Alert";
 import Header from "./header";
 import UsersApi from "../api/users";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import user from "../config";
+
+import ReactToPrint from "react-to-print";
+import Print from "./print";
 
 import "../design/main.css";
 import "../design/forms.css";
@@ -18,14 +20,20 @@ class Newvaccination extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: false,
       open: false,
       message: "Please Wait...",
       messageState: "",
       empty_error: false,
       vaccines: [],
       formData: [],
+      recepient: {},
+      required: {
+        vaccine_name: "",
+      },
     };
     this.fetchVaccines();
+    this.fetchNumber();
   }
 
   async fetchVaccines() {
@@ -44,13 +52,20 @@ class Newvaccination extends Component {
   };
 
   handleVaccination = async () => {
-    this.setState({ ...this.state, open: true, messageState: "info" });
+    this.setState({
+      ...this.state,
+      open: true,
+      message: "Please Wait....",
+      messageState: "info",
+    });
     let content = {};
-    content["user"] = user.user.doctors_id;
-    content["data"] = this.state.formData;
-    content["recepient"] = parseInt(
+    let recepient = parseInt(
       new URLSearchParams(window.location.search).get("recepient-id")
     );
+    content["user"] = user.user.doctors_id;
+    content["data"] = this.state.formData;
+    content["recepient"] = recepient;
+    content["date"] = Date.now();
     const api = new UsersApi();
     const res = await api.post("/admin/new-vaccination", content);
     if (res !== "Error") {
@@ -61,7 +76,7 @@ class Newvaccination extends Component {
           messageState: "success",
         });
         setTimeout(() => {
-          window.location.reload();
+          window.location.assign("/");
         }, 500);
       } else {
         this.setState({
@@ -72,6 +87,14 @@ class Newvaccination extends Component {
       }
     }
   };
+
+  async fetchNumber() {
+    let recepient = parseInt(
+      new URLSearchParams(window.location.search).get("recepient-id")
+    );
+    const [res] = (await UsersApi.data(`/admin/recepient/${recepient}`)) || [];
+    this.setState({ ...this.state, recepient: res === "Error" ? "" : res });
+  }
 
   handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,6 +120,7 @@ class Newvaccination extends Component {
         message: "Vaccine Added",
         messageState: "success",
         formData: [...this.state.formData, _fcontent],
+        print: true,
       });
     } else {
       this.setState({
@@ -143,6 +167,25 @@ class Newvaccination extends Component {
               <div className="card">
                 <div className="card-header">
                   <h3>Vaccine List</h3>
+                  <ReactToPrint
+                    trigger={() => {
+                      return (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          style={{ marginRight: 10 }}
+                        >
+                          <span
+                            style={{ fontSize: "17.5px", marginRight: "10px" }}
+                          >
+                            <i className="las la-print"></i>
+                          </span>
+                          Print
+                        </Button>
+                      );
+                    }}
+                    content={() => this.componentRef}
+                  />
                   <Button
                     variant="contained"
                     color="primary"
@@ -150,7 +193,7 @@ class Newvaccination extends Component {
                     onClick={this.handleVaccination}
                   >
                     <span style={{ fontSize: "17.5px", marginRight: "10px" }}>
-                      <i className="las la-redo"></i>
+                      <i className="las la-save"></i>
                     </span>
                     Save
                   </Button>
@@ -236,7 +279,7 @@ class Newvaccination extends Component {
                               getOptionLabel={(option) =>
                                 `${option.vaccine_name}`
                               }
-                              onChange={this.handleChangeVaccineName}
+                              // onChange={this.handleChangeVaccineName}
                               // onKeyUp={this.handleDrugNameKeyUp}
                               style={{
                                 width: "85%",
@@ -248,36 +291,20 @@ class Newvaccination extends Component {
                                   label="Search Vaccine"
                                   name="vaccine_name"
                                   variant="outlined"
+                                  error={this.state.error}
+                                  onChange={(e) => {
+                                    this.setState({
+                                      ...this.state,
+                                      required: {
+                                        ...this.state.required,
+                                        vaccine_name: e.target.value,
+                                      },
+                                    });
+                                  }}
                                 />
                               )}
                             />
-                            {/* <TextField
-                              disabled={this.state.active_drug ? false : true}
-                              error={this.state.empty_error}
-                              name="sight_of_vaccination"
-                              variant="outlined"
-                              label="Sight"
-                              style={{
-                                width: "85%",
-                                margin: "20px",
-                              }}
-                              value={this.state.vaccine.sight}
-                            /> */}
                           </div>
-                          {/* <div className="inpts_on_right">
-                            <TextField
-                              disabled={this.state.active_drug ? false : true}
-                              error={this.state.empty_error}
-                              name="disease"
-                              variant="outlined"
-                              label="Disease"
-                              style={{
-                                width: "85%",
-                                margin: "20px",
-                              }}
-                              value={this.state.vaccine.disease}
-                            />
-                          </div> */}
                         </div>
                       </div>
                     </div>
@@ -286,6 +313,17 @@ class Newvaccination extends Component {
               </div>
             </div>
           </main>
+        </div>
+        <div style={{ display: "none" }}>
+          {this.state.print ? (
+            <Print
+              ref={(el) => (this.componentRef = el)}
+              data={this.state.formData}
+              recepient={this.state.recepient.recepient_number}
+            />
+          ) : (
+            <></>
+          )}
         </div>
       </>
     );

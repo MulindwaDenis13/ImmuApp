@@ -36,38 +36,27 @@ class Nav extends Component {
                 </li>
 
                 <li>
-                  <Link to="/doctors">
+                  <Link to="/recepients">
                     <span
                       className={`${
-                        this.props.active === "doctors" ? "active" : ""
+                        this.props.active === "recepients" ? "active" : ""
                       } _a_replaced`}
                     >
                       <span className="las la-address-book"></span>
-                      <span>Doctors</span>
+                      <span>Recepients</span>
                     </span>
                   </Link>
                 </li>
+
                 <li>
-                  <Link to="/patients">
+                  <Link to="/vaccinations">
                     <span
                       className={`${
-                        this.props.active === "children" ? "active" : ""
-                      } _a_replaced`}
-                    >
-                      <span className="las la-user-injured"></span>
-                      <span>Patients</span>
-                    </span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/vaccines">
-                    <span
-                      className={`${
-                        this.props.active === "vaccines" ? "active" : ""
+                        this.props.active === "vaccinations" ? "active" : ""
                       } _a_replaced`}
                     >
                       <span className="las la-medkit"></span>
-                      <span>Vaccines</span>
+                      <span>Vaccinations</span>
                     </span>
                   </Link>
                 </li>

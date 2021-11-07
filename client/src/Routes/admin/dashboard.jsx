@@ -11,9 +11,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Select,
-  InputLabel,
-  FormControl,
 } from "@material-ui/core";
 import Nav from "./components/nav";
 import Header from "../../components/header";
@@ -31,12 +28,10 @@ class Dashboard extends Component {
     super(props);
     this.state = {
       AnchorEl: null,
+      vaccinate: false,
       AnchorElDrugs: null,
       AnchorElAddress: null,
       dialog: false,
-      district: false,
-      subcounty: false,
-      village: false,
       hospital_dialog: false,
       open: false,
       message: "Please Wait....",
@@ -45,14 +40,14 @@ class Dashboard extends Component {
       vaccines: [],
       recepients: [],
       doctors: [],
-      districts: [],
-      subcounties: [],
+      vaccinations: [],
+      recepient_vaccinations: [],
     };
     this.fetchHospitals();
     this.fetchVaccines();
     this.fetchRecepients();
     this.fetchDoctors();
-    this.fetchDistricts();
+    this.fetchVaccinations();
   }
 
   async fetchHospitals() {
@@ -60,16 +55,10 @@ class Dashboard extends Component {
     this.setState({ ...this.state, hospitals: res === "Error" ? [] : res });
   }
 
-  async fetchDistricts() {
-    const res = (await UsersApi.data("/admin/districts")) || [];
-    this.setState({ ...this.state, districts: res === "Error" ? [] : res });
+  async fetchVaccinations() {
+    const res = (await UsersApi.data("/admin/allVaccinations")) || [];
+    this.setState({ ...this.state, vaccinations: res === "Error" ? [] : res });
   }
-
-  fetchSub = async (e) => {
-    const res =
-      (await UsersApi.data(`/admin/subcounty/${e.target.value}`)) || [];
-    this.setState({ ...this.state, subcounties: res === "Error" ? [] : res });
-  };
 
   async fetchVaccines() {
     const res = (await UsersApi.data("/admin/vaccines")) || [];
@@ -90,20 +79,12 @@ class Dashboard extends Component {
     this.setState({ ...this.state, dialog: false });
   };
 
-  CloseDistrict = () => {
-    this.setState({ ...this.state, district: false });
-  };
-
-  CloseSubcounty = () => {
-    this.setState({ ...this.state, subcounty: false });
-  };
-
-  CloseVillage = () => {
-    this.setState({ ...this.state, village: false });
-  };
-
   closeHandler = () => {
     this.setState({ ...this.state, hospital_dialog: false });
+  };
+
+  CloseVaccinate = () => {
+    this.setState({ ...this.state, vaccinate: false });
   };
 
   closePopUp = (event, reason) => {
@@ -118,6 +99,25 @@ class Dashboard extends Component {
     });
   };
 
+  getNameSpaces(n, i) {
+    let name = n.split(" ")[0];
+    let name_formatted;
+    if (name.length === i) {
+      name_formatted = name + " ";
+    }
+    if (name.length > i) {
+      name_formatted = name.substring(0, i) + " ";
+    }
+    if (name.length < i) {
+      name_formatted = name;
+      let spaces = i - name.length;
+      for (let i = 0; i < spaces; i++) {
+        name_formatted = name_formatted + " ";
+      }
+    }
+    return name_formatted;
+  }
+
   handleOpenActions = (e) => {
     this.setState({ ...this.state, AnchorEl: e.currentTarget });
   };
@@ -129,117 +129,6 @@ class Dashboard extends Component {
   };
   handleCloseActionsDrugs = () => {
     this.setState({ ...this.state, AnchorElDrugs: null });
-  };
-  handleOpenAction = (e) => {
-    this.setState({ ...this.state, AnchorElAddress: e.currentTarget });
-  };
-  handleCloseAction = () => {
-    this.setState({ ...this.state, AnchorElAddress: null });
-  };
-
-  handleVillage = async (e) => {
-    e.preventDefault();
-    this.setState({
-      ...this.state,
-      open: true,
-      messageState: "info",
-      message: "Please Wait...",
-    });
-    const fd = new FormData(e.target);
-    let _fcontent = {};
-    fd.forEach((value, key) => {
-      _fcontent[key] = value;
-    });
-    const api = new UsersApi();
-    let res = await api.post("/admin/new-village", _fcontent);
-    if (res !== "Error") {
-      if (res.status === true) {
-        this.setState({
-          ...this.state,
-          message: res.data,
-          messageState: "success",
-        });
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      } else {
-        this.setState({
-          ...this.state,
-          message: res.data,
-          messageState: "error",
-        });
-      }
-    }
-  };
-
-  handleSubcounty = async (e) => {
-    e.preventDefault();
-    this.setState({
-      ...this.state,
-      open: true,
-      messageState: "info",
-      message: "Please Wait...",
-    });
-    const fd = new FormData(e.target);
-    let _fcontent = {};
-    fd.forEach((value, key) => {
-      _fcontent[key] = value;
-    });
-    const api = new UsersApi();
-    let res = await api.post("/admin/new-subcounty", _fcontent);
-    if (res !== "Error") {
-      if (res.status === true) {
-        this.setState({
-          ...this.state,
-          message: res.data,
-          messageState: "success",
-        });
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      } else {
-        this.setState({
-          ...this.state,
-          message: res.data,
-          messageState: "error",
-        });
-      }
-    }
-  };
-
-  handleDistrict = async (e) => {
-    e.preventDefault();
-    this.setState({
-      ...this.state,
-      open: true,
-      messageState: "info",
-      message: "Please Wait...",
-    });
-    const fd = new FormData(e.target);
-    let _fcontent = {};
-    fd.forEach((value, key) => {
-      _fcontent[key] = value;
-    });
-    const api = new UsersApi();
-    let res = await api.post("/admin/new-district", _fcontent);
-    if (res !== "Error") {
-      if (res.status === true) {
-        this.setState({
-          ...this.state,
-          message: res.data,
-          messageState: "success",
-        });
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      } else {
-        this.setState({
-          ...this.state,
-          message: res.data,
-          messageState: "error",
-        });
-      }
-    }
   };
 
   handleVaccine = async (e) => {
@@ -394,6 +283,11 @@ class Dashboard extends Component {
                 <div className="card">
                   <div className="card-header">
                     <h3>Recent Recepients</h3>
+                    <Link to="/recepients">
+                      <Button variant="contained" color="primary">
+                        Search
+                      </Button>
+                    </Link>
                     <Button
                       variant="contained"
                       color="primary"
@@ -424,7 +318,89 @@ class Dashboard extends Component {
                       </MenuItem>
                     </Menu>
                   </div>
-                  <div className="card-body"></div>
+                  <div className="card-body">
+                    <table width="100%">
+                      <thead>
+                        <tr>
+                          <td>Name</td>
+                          <td>No</td>
+                          <td>Date of Birth</td>
+                          <td>Birth Place</td>
+                          <td></td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {this.state.recepients.length === 0 ? (
+                          <tr>
+                            <td>You have Registered no Recepient </td>
+                          </tr>
+                        ) : this.state.recepients.length >= 5 ? (
+                          this.state.recepients
+                            .slice(
+                              this.state.recepients.length - 5,
+                              this.state.recepients.length
+                            )
+                            .map((v, i) => {
+                              return (
+                                <tr key={i}>
+                                  <td className="name_cell">{v.sur_name}</td>
+                                  <td>{v.recepient_number}</td>
+                                  <td>{v.date_of_birth}</td>
+                                  <td>{v.birth_place}</td>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={async () => {
+                                      let res = await UsersApi.data(
+                                        `/admin/vaccinations/${v.recepient_id}`
+                                      );
+                                      this.setState({
+                                        ...this.state,
+                                        recepient_vaccinations:
+                                          res === "Error" ? [] : res,
+                                        vaccinate: true,
+                                        data: v.recepient_id,
+                                      });
+                                    }}
+                                  >
+                                    Record
+                                  </Button>
+                                </tr>
+                              );
+                            })
+                        ) : (
+                          this.state.recepients.map((x, y) => {
+                            return (
+                              <tr key={y}>
+                                <td className="name_cell">{x.sur_name}</td>
+                                <td>{x.recepient_number}</td>
+                                <td>{x.date_of_birth}</td>
+                                <td>{x.birth_place}</td>
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  onClick={async () => {
+                                    let res = await UsersApi.data(
+                                      `/admin/vaccinations/${x.recepient_id}`
+                                    );
+                                    this.setState({
+                                      ...this.state,
+                                      recepient_vaccinations:
+                                        res === "Error" ? [] : res,
+                                      vaccinate: true,
+                                      data: x.recepient_id,
+                                    });
+                                  }}
+                                >
+                                  Record
+                                </Button>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
               <div className="projects">
@@ -478,77 +454,154 @@ class Dashboard extends Component {
                       </Link>
                     </Menu>
                   </div>
-                  <div className="card-body"></div>
-                </div>
-              </div>
-            </div>
-            <div className="recent-grid">
-              <div className="projects">
-                <div className="card">
-                  <div className="card-header">
-                    <h3>Addresses</h3>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      aria-controls="drug-actions"
-                      aria-haspopup="true"
-                      onClick={this.handleOpenAction}
-                    >
-                      Menu
-                      <span style={{ fontSize: "17.5px", marginLeft: "10px" }}>
-                        <span className="las la-angle-down"></span>
-                      </span>
-                    </Button>
-                    <Menu
-                      id="address"
-                      anchorEl={this.state.AnchorElAddress}
-                      keepMounted
-                      open={Boolean(this.state.AnchorElAddress)}
-                      onClose={this.handleCloseAction}
-                      disableScrollLock={true}
-                    >
-                      <MenuItem
-                        onClick={() => {
-                          this.setState({
-                            ...this.state,
-                            AnchorElAddress: null,
-                            district: true,
-                          });
-                        }}
-                      >
-                        New District
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          this.setState({
-                            ...this.state,
-                            AnchorElAddress: null,
-                            subcounty: true,
-                          });
-                        }}
-                      >
-                        New SubCounty
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          this.setState({
-                            ...this.state,
-                            AnchorElAddress: null,
-                            village: true,
-                          });
-                        }}
-                      >
-                        New Village
-                      </MenuItem>
-                    </Menu>
+                  <div className="card-body">
+                    <table width="100%">
+                      <thead>
+                        <tr>
+                          <td>Name</td>
+                          <td>Doctor Name</td>
+                          <td>Hospital</td>
+                          <td>Vaccines</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {this.state.vaccinations.length === 0 ? (
+                          <tr>
+                            <td>No Vaccination Made</td>
+                          </tr>
+                        ) : this.state.vaccinations.length >= 5 ? (
+                          this.state.vaccinations
+                            .slice(
+                              this.state.vaccinations.length - 5,
+                              this.state.vaccinations.length
+                            )
+                            .map((v, i) => {
+                              return (
+                                <tr key={i}>
+                                  <td>{v.sur_name}</td>
+                                  <td>{v.doctor_surname}</td>
+                                  <td>{v.doctor_hospital}</td>
+                                  <td>
+                                    <Button
+                                      color="primary"
+                                      variant="contained"
+                                      onClick={async () => {
+                                        let res = await UsersApi.data(
+                                          `/admin/vaccinations/${v.recepient_id}`
+                                        );
+                                        this.setState({
+                                          ...this.state,
+                                          recepient_vaccinations:
+                                            res === "Error" ? [] : res,
+                                          vaccinate: true,
+                                          data: v.recepient_id,
+                                        });
+                                      }}
+                                    >
+                                      See
+                                    </Button>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                        ) : (
+                          this.state.vaccinations.map((x, y) => {
+                            return (
+                              <tr key={y}>
+                                <td>{x.sur_name}</td>
+                                <td>{x.doctor_surname}</td>
+                                <td>{x.doctor_hospital}</td>
+                                <td>
+                                  <Button color="primary" variant="contained">
+                                    See
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="card-body"></div>
                 </div>
               </div>
             </div>
           </main>
           <Footer />
         </div>
+
+        <Dialog
+          open={this.state.vaccinate}
+          onClose={this.CloseVaccinate}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Vaccination</DialogTitle>
+
+          <DialogContent>
+            <DialogContentText>
+              <h5>Past Immunisations</h5>
+              <table>
+                <thead>
+                  <td>Hospital</td>
+                  <td>Vaccines</td>
+                  <td>Date</td>
+                </thead>
+                <tbody>
+                  {this.state.recepient_vaccinations.length === 0
+                    ? "No Vaccination for this recepient"
+                    : this.state.recepient_vaccinations.map((v, i) => {
+                        let vaccines = "";
+                        let vac = JSON.parse(v.vaccines);
+                        vac.forEach((v) => {
+                          if (vac.length > 1) {
+                            if (vac.indexOf(v) === vac.length - 1) {
+                              vaccines =
+                                vaccines +
+                                `${this.getNameSpaces(v.vaccine_name, 10)}`;
+                            } else {
+                              vaccines =
+                                vaccines +
+                                `${this.getNameSpaces(v.vaccine_name, 10)}` +
+                                ",";
+                            }
+                          } else {
+                            vaccines =
+                              vaccines +
+                              `${this.getNameSpaces(v.vaccine_name, 10)}`;
+                          }
+                        });
+                        return (
+                          <tr key={i}>
+                            <td>{v.doctor_hospital}</td>
+                            <td>{vaccines}</td>
+                            <td>
+                              {new Date(parseInt(v.vaccine_date)).getDate() +
+                                "-" +
+                                (new Date(parseInt(v.vaccine_date)).getMonth() +
+                                  1) +
+                                "-" +
+                                new Date(
+                                  parseInt(v.vaccine_date)
+                                ).getFullYear()}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                </tbody>
+              </table>
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.CloseVaccinate} color="primary">
+              Cancel
+            </Button>
+            <Link to={`/vaccination?recepient-id=${parseInt(this.state.data)}`}>
+              <Button type="submit" color="primary">
+                Continue
+              </Button>
+            </Link>
+          </DialogActions>
+        </Dialog>
 
         <Dialog
           open={this.state.dialog}
@@ -630,178 +683,6 @@ class Dashboard extends Component {
             </DialogContent>
             <DialogActions>
               <Button onClick={this.closeHandler} color="primary">
-                Cancel
-              </Button>
-              <Button type="submit" color="primary">
-                Save
-              </Button>
-            </DialogActions>
-          </form>
-        </Dialog>
-
-        <Dialog
-          open={this.state.district}
-          onClose={this.CloseDistrict}
-          aria-labelledby="form-dialog-title"
-        >
-          <DialogTitle id="form-dialog-title">Add District</DialogTitle>
-          <form autoComplete="off" onSubmit={this.handleDistrict}>
-            <DialogContent>
-              <DialogContentText>
-                <TextField
-                  name="district_name"
-                  variant="standard"
-                  label="District Name"
-                  style={{
-                    width: "85%",
-                    margin: "20px",
-                  }}
-                />
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={this.CloseDistrict} color="primary">
-                Cancel
-              </Button>
-              <Button type="submit" color="primary">
-                Save
-              </Button>
-            </DialogActions>
-          </form>
-        </Dialog>
-
-        <Dialog
-          open={this.state.subcounty}
-          onClose={this.CloseSubcounty}
-          aria-labelledby="form-dialog-title"
-        >
-          <DialogTitle id="form-dialog-title">Add SubCounty</DialogTitle>
-          <form autoComplete="off" onSubmit={this.handleSubcounty}>
-            <DialogContent>
-              <DialogContentText>
-                <FormControl
-                  variant="standard"
-                  style={{
-                    width: "75%",
-                    margin: "20px",
-                  }}
-                >
-                  <InputLabel id="district">District</InputLabel>
-                  <Select
-                    inputProps={{ name: "district" }}
-                    labelId="district"
-                    id="select_district"
-                    label="district"
-                    defaultValue=""
-                  >
-                    {this.state.districts.length === 0
-                      ? ""
-                      : this.state.districts.map((v, i) => {
-                          return (
-                            <MenuItem value={v.district_name} key={i}>
-                              {v.district_name}
-                            </MenuItem>
-                          );
-                        })}
-                  </Select>
-                </FormControl>
-                <TextField
-                  name="sub_name"
-                  variant="standard"
-                  label="Subcounty"
-                  style={{
-                    width: "85%",
-                    margin: "20px",
-                  }}
-                />
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={this.CloseSubcounty} color="primary">
-                Cancel
-              </Button>
-              <Button type="submit" color="primary">
-                Save
-              </Button>
-            </DialogActions>
-          </form>
-        </Dialog>
-
-        <Dialog
-          open={this.state.village}
-          onClose={this.CloseVillage}
-          aria-labelledby="form-dialog-title"
-        >
-          <DialogTitle id="form-dialog-title">Add Village</DialogTitle>
-          <form autoComplete="off" onSubmit={this.handleVillage}>
-            <DialogContent>
-              <DialogContentText>
-                <FormControl
-                  variant="standard"
-                  style={{
-                    width: "75%",
-                    margin: "20px",
-                  }}
-                >
-                  <InputLabel id="district">District</InputLabel>
-                  <Select
-                    inputProps={{ name: "district" }}
-                    labelId="district"
-                    id="select_district"
-                    label="district"
-                    defaultValue=""
-                    onChange={this.fetchSub}
-                  >
-                    {this.state.districts.length === 0
-                      ? ""
-                      : this.state.districts.map((v, i) => {
-                          return (
-                            <MenuItem value={v.district_name} key={i}>
-                              {v.district_name}
-                            </MenuItem>
-                          );
-                        })}
-                  </Select>
-                </FormControl>
-                <FormControl
-                  variant="standard"
-                  style={{
-                    width: "75%",
-                    margin: "20px",
-                  }}
-                >
-                  <InputLabel id="subcounty">Subcounty</InputLabel>
-                  <Select
-                    inputProps={{ name: "sub_county" }}
-                    labelId="subcounty"
-                    id="select_sub"
-                    label="subcounty"
-                    defaultValue=""
-                  >
-                    {this.state.subcounties.length === 0
-                      ? ""
-                      : this.state.subcounties.map((v, i) => {
-                          return (
-                            <MenuItem value={v.sub_county_name} key={i}>
-                              {v.sub_county_name}
-                            </MenuItem>
-                          );
-                        })}
-                  </Select>
-                </FormControl>
-                <TextField
-                  name="village_name"
-                  variant="standard"
-                  label="Village"
-                  style={{
-                    width: "85%",
-                    margin: "20px",
-                  }}
-                />
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={this.CloseSubcounty} color="primary">
                 Cancel
               </Button>
               <Button type="submit" color="primary">

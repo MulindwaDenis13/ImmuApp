@@ -6,6 +6,8 @@ import "line-awesome/dist/line-awesome/css/line-awesome.css";
 import Dashboard from "../Routes/doctor/dashboard";
 import Newpatient from "../Routes/doctor/newpatient";
 import Vaccination from "../Routes/doctor/vaccinate";
+import Recepients from "../Routes/doctor/recepients";
+import Vaccinations from "../Routes/doctor/vaccination";
 import Error from "../components/404";
 
 class Doctor extends Component {
@@ -21,6 +23,8 @@ class Doctor extends Component {
             <Route path="/" exact component={Dashboard} />
             <Route path="/new-patient" exact component={Newpatient} />
             <Route path="/vaccination" exact component={Vaccination} />
+            <Route path="/recepients" exact component={Recepients} />
+            <Route path="/vaccinations" exact component={Vaccinations} />
             <Route path="*" exact component={Error} />
           </Switch>
         </div>

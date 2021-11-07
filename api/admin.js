@@ -54,6 +54,47 @@ router.post("/new-vaccine", async (req, res) => {
   );
 });
 
+router.post("/edit-vaccine", async (req, res) => {
+  const { id, vaccine_name, sight_of_vaccine, disease } = req.body;
+  conn.query(
+    `UPDATE vaccines_tbl SET ? 
+    WHERE vaccine_id = ?`,
+    [
+      {
+        vaccine_name: vaccine_name,
+        sight_of_vaccination: sight_of_vaccine,
+        disease_prevented: disease,
+      },
+      id,
+    ],
+    (first_err, first_res) => {
+      if (first_err) {
+        console.log(first_err);
+        res.send({ data: "An Error Occured", status: false });
+      } else {
+        res.send({ data: "Vaccine Edited Successfully", status: true });
+      }
+    }
+  );
+});
+
+router.post("/delete-vaccine", async (req, res) => {
+  const { id } = req.body;
+  conn.query(
+    `DELETE FROM vaccines_tbl
+     WHERE vaccine_id = ?`,
+    id,
+    (first_err, first_res) => {
+      if (first_err) {
+        console.log(first_err);
+        res.send({ data: "An Error Occured", status: false });
+      } else {
+        res.send({ data: "Vaccine Deleted Successfully", status: true });
+      }
+    }
+  );
+});
+
 router.post("/new-district", async (req, res) => {
   const { district_name } = req.body;
   conn.query(
@@ -138,7 +179,7 @@ router.post("/new-village", async (req, res) => {
           conn.query(
             `INSERT INTO village_tbl SET ?`,
             {
-              subcounty_id: sub_county,
+              sub_county_id: sub_county,
               village_name: village_name,
             },
             (insert_err, insert_res) => {
@@ -248,6 +289,23 @@ router.post("/new-doctor", async (req, res) => {
   }
 });
 
+router.post("/delete-doctor", async (req, res) => {
+  const { id } = req.body;
+  conn.query(
+    `DELETE FROM doctors_tbl
+     WHERE doctors_id = ?`,
+    id,
+    (first_err, first_res) => {
+      if (first_err) {
+        console.log(first_err);
+        res.send({ data: "An Error Occured", status: false });
+      } else {
+        res.send({ data: "Doctor Deleted Successfully", status: true });
+      }
+    }
+  );
+});
+
 router.post("/new-recepient", async (req, res) => {
   const {
     recepient_number,
@@ -258,7 +316,6 @@ router.post("/new-recepient", async (req, res) => {
     birth_weight,
     birth_order,
     place_of_birth,
-    age,
     district,
     sub_county,
     village,
@@ -272,6 +329,8 @@ router.post("/new-recepient", async (req, res) => {
     father_occupation,
     father_religion,
     father_education_level,
+    date,
+    user,
   } = req.body;
   conn.query(
     `INSERT INTO recepients_tbl SET ?`,
@@ -281,13 +340,14 @@ router.post("/new-recepient", async (req, res) => {
       other_name: other_names,
       date_of_birth: dob,
       birth_place: place_of_birth,
-      child_age: parseInt(age),
       child_gender: gender,
       birth_order: birth_order,
       birth_weight: birth_weight,
       district: district,
       sub_county: sub_county,
       village: village,
+      doctors_id: user,
+      recepient_date: date,
     },
     (first_err, first_res) => {
       if (first_err) {
@@ -297,7 +357,7 @@ router.post("/new-recepient", async (req, res) => {
         conn.query(
           `INSERT INTO parents_tbl SET ?`,
           {
-            child_id: recepient_number,
+            recepient: recepient_number,
             mother_name: mother_name,
             mother_contact: mother_contact,
             mother_occupation: mother_occupation,
@@ -324,13 +384,28 @@ router.post("/new-recepient", async (req, res) => {
 });
 
 router.post("/new-vaccination", async (req, res) => {
-  const { data, user, recepient } = req.body;
+  const { data, user, recepient, date } = req.body;
+  data.forEach((i) => {
+    conn.query(
+      `INSERT INTO vaccine_track SET ?`,
+      {
+        vaccine_id: i.vaccine_name,
+      },
+      (error, result) => {
+        if (error) {
+          console.log(error);
+          res.send({ data: "An Error Occured", status: false });
+        }
+      }
+    );
+  });
   conn.query(
     `INSERT INTO vaccination_tbl SET ?`,
     {
-      user_id: user,
+      doctors_id: user,
       recepient_id: recepient,
       vaccines: JSON.stringify(data),
+      vaccine_date: date,
     },
     (first_err, first_res) => {
       if (first_err) {
@@ -346,14 +421,14 @@ router.post("/new-vaccination", async (req, res) => {
 router.get("/pnumber", async (req, res) => {
   conn.query(
     `SELECT recepient_number FROM recepients_tbl 
-      ORDER BY patient_id DESC LIMIT 1`,
+      ORDER BY recepient_id DESC LIMIT 1`,
     (err, sql_res) => {
       if (err) {
         console.log(err);
       } else {
         let last_id =
           sql_res.length > 0
-            ? parseInt(sql_res[0].recepient_number.substr(7, 9)) + 1
+            ? parseInt(sql_res[0].recepient_number.substr(5, 7)) + 1
             : 1;
         let id =
           last_id < 10
@@ -368,15 +443,25 @@ router.get("/pnumber", async (req, res) => {
             (date.getDate() < 10
               ? "0" + date.getDate().toString()
               : date.getDate().toString()) +
-            "/" +
             (date.getMonth() < 10
               ? "0" + (date.getMonth() + 1).toString()
               : (date.getMonth() + 1).toString()) +
-            "/" +
             id
           );
         }
       }
+    }
+  );
+});
+
+router.get("/recepient/:id", async (req, res) => {
+  conn.query(
+    `SELECT * FROM recepients_tbl
+     WHERE recepient_id = ?`,
+    req.params.id,
+    (first_err, first_res) => {
+      if (first_err) throw first_err;
+      res.send(first_res);
     }
   );
 });
@@ -429,7 +514,7 @@ router.get("/subcounty/:id", async (req, res) => {
 router.get("/village/:id", async (req, res) => {
   conn.query(
     `SELECT * FROM 
-  village_tbl WHERE subcounty_id = ?`,
+  village_tbl WHERE sub_county_id = ?`,
     req.params.id,
     (first_err, first_res) => {
       if (first_err) throw first_err;
@@ -441,7 +526,8 @@ router.get("/village/:id", async (req, res) => {
 router.get("/doctors", async (req, res) => {
   conn.query(
     `SELECT * FROM 
-  doctors_tbl`,
+  doctors_tbl 
+  WHERE doctor_role = 'doctor'`,
     (first_err, first_res) => {
       if (first_err) throw first_err;
       res.send(first_res);
@@ -452,7 +538,107 @@ router.get("/doctors", async (req, res) => {
 router.get("/recepients", async (req, res) => {
   conn.query(
     `SELECT * FROM 
-      recepients_tbl`,
+    parents_tbl   JOIN recepients_tbl ON 
+      parents_tbl.recepient = recepients_tbl.recepient_number`,
+    (first_err, first_res) => {
+      if (first_err) throw first_err;
+      res.send(first_res);
+    }
+  );
+});
+
+router.get("/recepients/:id", async (req, res) => {
+  conn.query(
+    `SELECT * FROM 
+    recepients_tbl WHERE doctors_id = ?`,
+    req.params.id,
+    (first_err, first_res) => {
+      if (first_err) throw first_err;
+      res.send(first_res);
+    }
+  );
+});
+
+router.get("/vaccinations/:id", async (req, res) => {
+  conn.query(
+    `SELECT * FROM 
+      vaccination_tbl JOIN 
+      doctors_tbl ON 
+      vaccination_tbl.doctors_id = doctors_tbl.doctors_id 
+      WHERE vaccination_tbl.recepient_id = ?`,
+    req.params.id,
+    (first_err, first_res) => {
+      if (first_err) throw first_err;
+      res.send(first_res);
+    }
+  );
+});
+
+router.get("/recepient-search/:id", async (req, res) => {
+  let pattern = /\W/g;
+  let check = pattern.test(req.params.id);
+  if (check === true) {
+    res.send([]);
+    return;
+  } else {
+    conn.query(
+      `SELECT * FROM 
+        recepients_tbl JOIN parents_tbl ON 
+          recepients_tbl.recepient_number = parents_tbl.recepient
+         WHERE recepient_number LIKE '%${req.params.id}%'`,
+      req.params.id,
+      (first_err, first_res) => {
+        if (first_err) throw first_err;
+        res.send(first_res);
+      }
+    );
+  }
+});
+
+router.get("/allVaccinations", async (req, res) => {
+  conn.query(
+    `SELECT * FROM vaccination_tbl
+     JOIN recepients_tbl ON 
+     vaccination_tbl.recepient_id = recepients_tbl.recepient_id
+      JOIN doctors_tbl ON
+       vaccination_tbl.doctors_id = doctors_tbl.doctors_id`,
+    (first_err, first_res) => {
+      if (first_err) throw first_err;
+      res.send(first_res);
+    }
+  );
+});
+
+router.get("/doctor-vaccinations/:id", async (req, res) => {
+  conn.query(
+    `SELECT * FROM vaccination_tbl JOIN recepients_tbl ON 
+    vaccination_tbl.recepient_id = recepients_tbl.recepient_id
+    JOIN doctors_tbl ON 
+    vaccination_tbl.doctors_id = doctors_tbl.doctors_id
+    WHERE vaccination_tbl.doctors_id = ?`,
+    req.params.id,
+    (first_err, first_res) => {
+      if (first_err) throw first_err;
+      res.send(first_res);
+    }
+  );
+});
+
+router.get("/chart-vaccination", async (req, res) => {
+  conn.query(
+    `SELECT * FROM 
+  vaccination_tbl`,
+    (first_err, first_res) => {
+      if (first_err) throw first_err;
+      res.send(first_res);
+    }
+  );
+});
+
+router.get("/vaccine-usage", async (req, res) => {
+  conn.query(
+    `SELECT * FROM 
+  vaccine_track`,
     (first_err, first_res) => {
       if (first_err) throw first_err;
       res.send(first_res);
