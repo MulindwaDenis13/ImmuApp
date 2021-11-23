@@ -221,10 +221,6 @@ class Recepients extends Component {
                       </span>
                       {this.state.recepient.birth_weight}kg
                     </td>
-                    <td>
-                      <span style={{ fontWeight: "bolder" }}>Child Age :</span>
-                      {this.state.recepient.child_age}years
-                    </td>
                   </tr>
                   <tr>
                     <td>

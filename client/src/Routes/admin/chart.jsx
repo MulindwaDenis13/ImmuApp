@@ -27,26 +27,8 @@ class Chart extends Component {
         datasets: [],
       },
       vaccineUsage: {
-        labels: [
-          "BCG",
-          "DPT",
-          "Polio Vaccine",
-          "Measles Vaccine",
-          "Tetanus Vaccine",
-        ],
-        datasets: [
-          {
-            label: "Usage",
-            backgroundColor: "rgba(38,185,154,0.31)",
-            borderColor: "rgba(38,185,154,0.7)",
-            pointBorderColor: "rgba(38,185,154,0.7)",
-            pointBackgroundColor: "rgba(38,185,154,0.7)",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: "rgba(220,220,220,1)",
-            pointBorderWidth: 1,
-            data: [34, 60, 12, 22, 44],
-          },
-        ],
+        labels: [],
+        datasets: [],
       },
     };
     this.fetchVaccination();
@@ -149,7 +131,7 @@ class Chart extends Component {
         ...this.state.vaccinationChart,
         datasets: [
           {
-            label: "Vaccinations",
+            label: "Number of Vaccinations",
             backgroundColor: "rgba(38,88,104,0.3)",
             borderColor: "rgba(38,88,104,0.7)",
             pointBorderColor: "rgba(38,88,104,0.7)",
@@ -166,6 +148,9 @@ class Chart extends Component {
 
   async fetchUsage() {
     const res = (await UsersApi.data("/admin/vaccine-usage")) || [];
+    let labels = [];
+    let labelfinal = [];
+    let datasets = [];
     res === "Error"
       ? this.setState({
           ...this.state,
@@ -175,7 +160,39 @@ class Chart extends Component {
             datasets: [],
           },
         })
-      : res.forEach((i) => {});
+      : res.forEach((i) => {
+          let label = labels.find((e) => e.vaccine === i.vaccine_id);
+          if (!label) {
+            labels.push({ vaccine: i.vaccine_id, qty: 1 });
+          } else {
+            let index = labels.findIndex((y) => y.vaccine === i.vaccine_id);
+            labels[index].qty = labels[index].qty + 1;
+          }
+        });
+    labels.forEach((l) => {
+      labelfinal.push(l.vaccine);
+      datasets.push(l.qty);
+    });
+    this.setState({
+      ...this.state,
+      vaccineUsage: {
+        ...this.state.vaccineUsage,
+        labels: labelfinal,
+        datasets: [
+          {
+            label: "Usage",
+            backgroundColor: "rgba(38,185,154,0.31)",
+            borderColor: "rgba(38,185,154,0.7)",
+            pointBorderColor: "rgba(38,185,154,0.7)",
+            pointBackgroundColor: "rgba(38,185,154,0.7)",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220,220,220,1)",
+            pointBorderWidth: 1,
+            data: datasets,
+          },
+        ],
+      },
+    });
   }
 
   render() {
